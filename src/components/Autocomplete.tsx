@@ -22,12 +22,6 @@ export const Autocomplete: React.FC<Props> = ({
 
   const filterPeople = useCallback(
     (text: string) => {
-      if (!text.trim()) {
-        setSuggestions(people);
-
-        return;
-      }
-
       const lower = text.toLowerCase();
       const filtered = people.filter(ppl =>
         ppl.name.toLowerCase().includes(lower),
@@ -54,8 +48,14 @@ export const Autocomplete: React.FC<Props> = ({
     }
 
     setLastSearchedText(newText);
-    debounceFilter(newText);
     setIsDropdownOpen(true);
+
+    if (!newText.trim()) {
+      debounceFilter.cancel();
+      setSuggestions(people);
+    } else {
+      debounceFilter(newText);
+    }
   };
 
   const handleFocus = () => {
