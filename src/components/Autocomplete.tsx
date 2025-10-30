@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Person } from '../types/Person';
 import debounce from 'lodash.debounce';
 
@@ -72,10 +72,34 @@ export const Autocomplete: React.FC<Props> = ({
     onSelected(person);
   };
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   const noSuggestions = suggestions.length === 0 && inputValue.trim();
 
   return (
-    <div className={`dropdown ${isDropdownOpen ? 'is-active' : ''}`}>
+    <div
+      ref={dropdownRef}
+      className={`dropdown ${isDropdownOpen ? 'is-active' : ''}`}
+    >
       <div className="dropdown-trigger">
         <input
           type="text"
@@ -93,7 +117,7 @@ export const Autocomplete: React.FC<Props> = ({
           <div className="dropdown-content">
             {suggestions.map(person => (
               <div
-                key={person.name}
+                key={person.slug}
                 className="dropdown-item"
                 onClick={() => handleSelect(person)}
                 data-cy="suggestion-item"
